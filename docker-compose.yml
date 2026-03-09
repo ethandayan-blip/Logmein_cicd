@@ -1,0 +1,88 @@
+version: '3.8'
+
+# ============================================================
+# docker-compose.yml — Environnement local / développement
+# Les credentials viennent du fichier .env (jamais commité)
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Base de données PostgreSQL
+  # ----------------------------------------------------------
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    # Healthcheck : le backend attend que la DB soit prête
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # La DB n'est pas exposée à l'extérieur — réseau interne uniquement
+    expose:
+      - "5432"
+
+  # ----------------------------------------------------------
+  # Backend Flask
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: 5432
+      FLASK_DEBUG: "false"
+      API_KEY: ${API_KEY}
+      ALLOWED_ORIGINS: "http://localhost:3000,http://frontend"
+    # Exposé uniquement en local pour debug direct
+    # En prod (Swarm), le backend n'est pas exposé directement
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # ----------------------------------------------------------
+  # Frontend Nginx
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# ----------------------------------------------------------
+# Réseau interne — les services communiquent entre eux
+# sans être exposés à l'extérieur
+# ----------------------------------------------------------
+networks:
+  app-network:
+    driver: bridge
+
+# ----------------------------------------------------------
+# Volume persistant pour PostgreSQL
+# Les données survivent aux redémarrages
+# ----------------------------------------------------------
+volumes:
+  postgres_data:
