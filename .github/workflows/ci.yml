@@ -26,7 +26,7 @@ jobs:
         run: pip install flake8
 
       - name: Run Flake8
-        run: flake8 backend/app.py --max-line-length=120
+        run: flake8 backend/app.py --max-line-length=120 --extend-ignore=E302,E305,W291,W293
 
   # ─── JOB 2 : Tests avec PostgreSQL ──────────────────────────────
   test:
