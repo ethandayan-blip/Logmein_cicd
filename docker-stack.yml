@@ -1,0 +1,121 @@
+version: '3.8'
+
+# ============================================================
+# docker-stack.yml — Déploiement Docker Swarm (production)
+# Différences vs docker-compose.yml :
+#   - Pas de "build" → on utilise des images déjà buildées
+#   - Replicas pour la haute disponibilité
+#   - Docker Secrets pour les credentials (plus de .env)
+#   - Réseau overlay chiffré entre les nodes
+#   - Pas de ports exposés directement sur le backend
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Base de données PostgreSQL
+  # Contrainte : toujours sur le manager (stockage persistant)
+  # ----------------------------------------------------------
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logs_db
+      POSTGRES_USER: logs_user
+      # Le mot de passe vient d'un Docker Secret — jamais en clair
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      placement:
+        # La DB reste sur le manager pour la persistance du volume
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------------------------
+  # Backend Flask
+  # 2 replicas → Swarm load-balance automatiquement
+  # ----------------------------------------------------------
+  backend:
+    image: ${DOCKER_USERNAME}/logmein-backend:latest
+    environment:
+      DB_HOST: db
+      DB_NAME: logs_db
+      DB_USER: logs_user
+      DB_PORT: 5432
+      FLASK_DEBUG: "false"
+      ALLOWED_ORIGINS: "http://frontend"
+    secrets:
+      - db_password
+      - api_key
+    # Pas de ports exposés : le backend est accessible uniquement
+    # via le réseau interne overlay (sécurité)
+    networks:
+      - app-network
+    deploy:
+      replicas: 2
+      update_config:
+        # Rolling update : 1 replica à la fois, 10s entre chaque
+        # Zéro downtime lors des mises à jour
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------------------------
+  # Frontend Nginx
+  # 2 replicas → haute disponibilité
+  # Point d'entrée public de l'application
+  # ----------------------------------------------------------
+  frontend:
+    image: ${DOCKER_USERNAME}/logmein-frontend:latest
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+# ----------------------------------------------------------
+# Secrets Docker Swarm
+# Créés au préalable sur le manager avec :
+#   echo "mot_de_passe" | docker secret create db_password -
+#   echo "cle_api" | docker secret create api_key -
+# ----------------------------------------------------------
+secrets:
+  db_password:
+    external: true
+  api_key:
+    external: true
+
+# ----------------------------------------------------------
+# Réseau overlay chiffré entre tous les nodes du Swarm
+# ----------------------------------------------------------
+networks:
+  app-network:
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+
+volumes:
+  postgres_data:
