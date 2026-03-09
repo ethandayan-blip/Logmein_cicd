@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: logs_db
+      POSTGRES_USER: logs_user
+      POSTGRES_PASSWORD: logs_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logs_user -d logs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend-net
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_NAME: logs_db
+      DB_USER: logs_user
+      DB_PASSWORD: logs_password
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+      - frontend-net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - frontend-net
+
+volumes:
+  postgres_data:
+
+networks:
+  backend-net:
+    driver: bridge
+  frontend-net:
+    driver: bridge
