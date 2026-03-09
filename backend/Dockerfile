@@ -11,9 +11,11 @@ WORKDIR /app
 
 # CHANGEMENT 2 : --no-install-recommends réduit la surface d'attaque
 # ORIGINAL : apt-get install -y gcc libpq-dev
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        libpq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
