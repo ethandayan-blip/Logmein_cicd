@@ -37,15 +37,15 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/logmein-frontend:latest
             ${{ secrets.DOCKER_USERNAME }}/logmein-frontend:${{ github.sha }}
 
-      - name: Deploy to Docker Swarm
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SWARM_MANAGER_IP }}
-          username: deploy
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker stack deploy \
-              -c /opt/logmein/docker-stack.yml \
-              --with-registry-auth \
-              logmein
-            docker service ls
+#      - name: Deploy to Docker Swarm
+#         uses: appleboy/ssh-action@v1
+#        with:
+#          host: ${{ secrets.SWARM_MANAGER_IP }}
+#          username: deploy
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          script: |
+#            docker stack deploy \
+#              -c /opt/logmein/docker-stack.yml \
+#              --with-registry-auth \
+#              logmein
+#            docker service ls
