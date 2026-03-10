@@ -3,3 +3,4 @@ Flask-CORS
 psycopg2-binary
 pytest
 pytest-flask
+gunicorn
