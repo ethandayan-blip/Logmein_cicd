@@ -168,3 +168,11 @@ def test_invalid_log_data(client):
     assert data['log']['level'] == 'info'  # Default value
     assert data['log']['message'] == ''  # Default value
     assert data['log']['service'] == 'unknown'  # Default value
+
+def test_log_message_too_long(client):
+    response = client.post('/logs', json={
+        'message': 'A' * 1001,
+        'level': 'INFO',
+        'service': 'test'
+    })
+    assert response.status_code == 400
