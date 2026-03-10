@@ -58,6 +58,7 @@ jobs:
           DB_USER: logs_user
           DB_PASSWORD: logs_password
           DB_PORT: 5432
+          API_KEY: test_api_key
         run: pytest tests/ -v
   # ─── JOB 3 : Build + Scan Trivy ──────────────────────────────────
   build-and-scan:
