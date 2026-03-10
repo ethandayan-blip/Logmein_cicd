@@ -251,4 +251,4 @@ docker compose ps
 
 Projet réalisé dans le cadre du cursus **JEDHA Fullstack Cybersecurity**.
 
-- CI/CD Pipeline : Alexis Bourland
+par team BR34CH
