@@ -247,6 +247,10 @@ def get_stats():
 @app.route('/logs/clear', methods=['DELETE'])
 def clear_logs():
     """Vide tous les logs (utilisation avec précaution)"""
+    api_key = request.headers.get('X-API-Key')
+    if api_key != os.getenv('API_KEY'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()

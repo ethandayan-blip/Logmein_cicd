@@ -176,3 +176,12 @@ def test_log_message_too_long(client):
         'service': 'test'
     })
     assert response.status_code == 400
+
+def test_clear_logs_without_api_key(client):
+    response = client.delete('/logs/clear')
+    assert response.status_code == 401
+
+def test_clear_logs_with_valid_api_key(client):
+    response = client.delete('/logs/clear',
+                             headers={'X-API-Key': os.getenv('API_KEY', 'test_api_key')})
+    assert response.status_code == 200
