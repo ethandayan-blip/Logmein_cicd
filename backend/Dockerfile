@@ -22,6 +22,7 @@ COPY requirements.txt .
 # CHANGEMENT 3 : --no-cache-dir évite de stocker le cache pip dans l'image
 # ORIGINAL : RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
 COPY app.py .
 

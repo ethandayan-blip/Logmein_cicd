@@ -72,6 +72,49 @@ services:
       - app-network
     restart: unless-stopped
 
+  # --- MONITORING (NOUVEAU) ---
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      # On monte le fichier de config qu'on vient de créer
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # Persistance des données Prometheus (optionnel mais recommandé)
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - "--storage.tsdb.retention.time=15d"
+
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: any
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3100:3000" # Port 3100 pour ne pas avoir de conflit avec le frontend (3000)
+    volumes:
+      - grafana_data:/var/lib/grafana
+    deploy:
+      replicas: 1
+    networks:
+      - monitor-net
+    depends_on:
+      - prometheus
+
+
 # ----------------------------------------------------------
 # Réseau interne — les services communiquent entre eux
 # sans être exposés à l'extérieur
@@ -79,10 +122,14 @@ services:
 networks:
   app-network:
     driver: bridge
-
+  monitor-net:
+    driver: bridge
 # ----------------------------------------------------------
 # Volume persistant pour PostgreSQL
 # Les données survivent aux redémarrages
 # ----------------------------------------------------------
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:
+
