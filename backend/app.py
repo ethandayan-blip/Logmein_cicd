@@ -132,11 +132,11 @@ def add_log():
         
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        
-	if len(data.get('message', '')) > 1000:
-   	    return jsonify({'error': 'Message trop long (max 1000 caractères)'}), 400
-	if len(data.get('service', '')) > 100:
-    	    return jsonify({'error': 'Service trop long (max 100 caractères)'}), 400
+
+        if len(data.get('message', '')) > 1000:
+            return jsonify({'error': 'Message trop long (max 1000 caractères)'}), 400
+        if len(data.get('service', '')) > 100:
+            return jsonify({'error': 'Service trop long (max 100 caractères)'}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
