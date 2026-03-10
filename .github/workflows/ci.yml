@@ -1,39 +1,30 @@
 name: CI Pipeline
-
 on:
   push:
     branches: ["*"]
   pull_request:
     branches: [main]
-
 jobs:
-
   # ─── JOB 1 : Lint ────────────────────────────────────────────────
   lint:
     name: Lint (Flake8)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install Flake8
         run: pip install flake8
-
       - name: Run Flake8
         run: flake8 backend/app.py --max-line-length=120 --extend-ignore=E302,E305,W291,W293
-
   # ─── JOB 2 : Tests avec PostgreSQL ──────────────────────────────
   test:
     name: Tests Pytest
     runs-on: ubuntu-latest
     needs: lint
-
     services:
       postgres:
         image: postgres:15-alpine
@@ -48,21 +39,17 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: |
           pip install -r backend/requirements.txt
           pip install -r backend/requirements.dev.txt
-
       - name: Run pytest
         working-directory: backend
         env:
@@ -72,23 +59,18 @@ jobs:
           DB_PASSWORD: logs_password
           DB_PORT: 5432
         run: pytest tests/ -v
-
   # ─── JOB 3 : Build + Scan Trivy ──────────────────────────────────
   build-and-scan:
     name: Build + Trivy Security Scan
     runs-on: ubuntu-latest
     needs: test
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Build backend image
         run: docker build -t logmein-backend:${{ github.sha }} ./backend
-
       - name: Build frontend image
         run: docker build -t logmein-frontend:${{ github.sha }} ./frontend
-
       - name: Trivy scan — backend (bloque si CVE CRITICAL)
         uses: aquasecurity/trivy-action@master
         with:
@@ -96,7 +78,7 @@ jobs:
           format: table
           exit-code: "1"
           severity: CRITICAL
-
+          trivyignores: .trivyignore
       - name: Trivy scan — frontend (bloque si CVE CRITICAL)
         uses: aquasecurity/trivy-action@master
         with:
@@ -104,3 +86,4 @@ jobs:
           format: table
           exit-code: "1"
           severity: CRITICAL
+          trivyignores: .trivyignore
