@@ -99,7 +99,7 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - app-network
+      - monitor-net
 
   grafana:
     image: grafana/grafana:latest
