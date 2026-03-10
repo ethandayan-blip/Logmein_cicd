@@ -129,25 +129,19 @@ def test_get_stats(client):
     assert 'service2' in data['services']
 
 def test_clear_logs(client):
-    """Test clearing all logs"""
-    # First add a test log
     test_log = {
         'level': 'info',
         'message': 'Test log to be cleared',
         'service': 'test_service'
     }
-    client.post('/logs',
-                data=json.dumps(test_log),
-                content_type='application/json')
-    
-    # Clear logs
-    response = client.delete('/logs/clear')
+    client.post('/logs', data=json.dumps(test_log), content_type='application/json')
+
+    response = client.delete('/logs/clear',
+                             headers={'X-API-Key': os.getenv('API_KEY', 'test_api_key')})
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert 'success' in data
     assert data['success'] is True
 
-    # Verify logs are cleared
     response = client.get('/logs')
     data = json.loads(response.data)
     assert data['total'] == 0
