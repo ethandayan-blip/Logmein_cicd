@@ -1,6 +1,9 @@
 
 [LogMeIn-GNS3-ReadMe.pdf](https://github.com/user-attachments/files/25903400/LogMeIn-GNS3-ReadMe.pdf)
 
+3.2 G de conf' GNS3 :
+https://gofile.io/d/t9X2sv
+
 # LogMeIn — GNS3 Global view
 
 ![GNS3setup](https://github.com/user-attachments/assets/d37f901f-86e0-4d83-a8ce-934b350e836c)
