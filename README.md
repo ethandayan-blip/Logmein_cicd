@@ -1,3 +1,6 @@
+
+[LogMeIn-GNS3-ReadMe.pdf](https://github.com/user-attachments/files/25903400/LogMeIn-GNS3-ReadMe.pdf)
+
 # LogMeIn — GNS3 Global view
 
 ![GNS3setup](https://github.com/user-attachments/assets/d37f901f-86e0-4d83-a8ce-934b350e836c)
