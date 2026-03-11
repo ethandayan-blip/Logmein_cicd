@@ -1,3 +1,6 @@
+
+![GNS3setup](https://github.com/user-attachments/assets/d37f901f-86e0-4d83-a8ce-934b350e836c)
+
 # LogMeIn — CI/CD Pipeline Documentation
 
 ## Architecture Overview
